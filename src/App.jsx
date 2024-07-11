@@ -1,11 +1,11 @@
 import Chat from "./components/chat/Chat"
 import Detail from "./components/details/Detail"
 import List from "./components/list/List"
-import Login from "./login/Login"
+import Login from "./components/login/Login"
 
 const App = () => {
 
-  const user = false;
+  const user = true;
 
   return (
     <div className='container'>
@@ -18,6 +18,7 @@ const App = () => {
         </>
       ) : (<Login/>)
     }
+   
     </div>
   )
 }

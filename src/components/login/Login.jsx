@@ -1,11 +1,27 @@
 import './login.css'
+import { useState } from 'react'
 
 const Login = () => {
+
+  const [avatar, setAvatar] = useState({
+    file:null,
+    url:""
+  });
+
+  const handleAvatar = (e) => {
+    if(e.target.files[0]){
+      setAvatar({
+        file:e.target.files[0],
+        url: URL.createObjectURL(e.target.files[0])
+      })
+    }
+  }
+
   return (
     <div className='login'>
       <div className="item">
         <h2>Welcome back,</h2>
-        <form>
+        <form >
             <input type="text" placeholder='Email' name='email' />
             <input type="password" placeholder='password' name='password' />
             <button>Sign in</button>
@@ -15,12 +31,14 @@ const Login = () => {
       <div className="item">
       <h2>Create an account</h2>
         <form>
-            <label htmlFor="file">Upload an image</label>
-            <input type="file" id='file' style={{display:"none"}} />
+            <label htmlFor="file">
+              <img src={avatar.url || './avatar.png'}/>          
+              Upload an image</label>
+            <input type="file" id='file' style={{display:"none"}} onChange={handleAvatar} />
             <input type="text" placeholder='Username' name='username' />
             <input type="text" placeholder='Email' name='email' />
             <input type="password" placeholder='password' name='password' />
-            <button>Sign in</button>
+            <button>Sign Up</button>
         </form>
       </div>
     </div>
