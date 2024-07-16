@@ -1,5 +1,9 @@
 import './login.css'
 import { useState } from 'react'
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from "../../lib/firebase"
+import { doc, setDoc } from 'firebase/firestore';
+import upload from '../../lib/upload';
 
 const Login = () => {
 
@@ -17,11 +21,48 @@ const Login = () => {
     }
   }
 
+  const handleLogin = e =>{
+    e.preventDefault();
+  } 
+
+  const handleRegister = async e =>{
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const {username, email, password} = Object.fromEntries(formData)
+
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+
+      let imgURL = "";
+      if (avatar.file) {
+        imgURL = await upload(avatar.file); 
+      }
+
+      const userDoc = {
+        username,
+        email,
+        avatar: imgURL, 
+        id: res.user.uid,
+        blocked: [],
+      };
+
+      await setDoc(doc(db, 'users', res.user.uid), userDoc);
+
+      await setDoc(doc(db, 'userchats', res.user.uid), {
+        chats: []
+      });
+
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
   return (
     <div className='login'>
       <div className="item">
         <h2>Welcome back,</h2>
-        <form >
+        <form onSubmit={handleLogin}>
             <input type="text" placeholder='Email' name='email' />
             <input type="password" placeholder='password' name='password' />
             <button>Sign in</button>
@@ -30,7 +71,7 @@ const Login = () => {
       <div className="separator"></div>
       <div className="item">
       <h2>Create an account</h2>
-        <form>
+        <form onSubmit={handleRegister}>
             <label htmlFor="file">
               <img src={avatar.url || './avatar.png'}/>          
               Upload an image</label>
