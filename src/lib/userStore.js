@@ -3,9 +3,11 @@ import { create } from 'zustand'
 import { db } from './firebase';
 
 export const useUserStore = create((set) => ({
+    
   currentUser: null,
   isLoading: true,
   fetchUserInfo: async (uid) => {
+    set({ isLoading: true });
     if(!uid) return set({currentUser:null, isloading: false})
 
         try {
