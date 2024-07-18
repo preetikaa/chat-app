@@ -1,11 +1,16 @@
 import './chat.css'
 import EmojiPicker from 'emoji-picker-react'
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore'
+import { db } from '../../lib/firebase'
 import { useState, useRef, useEffect } from 'react'
+import { useChatStore } from '../../lib/chatStore'
 
 const Chat = () => {
     const[open, setOpen] = useState(false)
     const[text, setText] = useState("")
+    const[chat, setChat] = useState()
 
+    const {chatId} = useChatStore()
 
     const handleEmoji = (e) => {
         setText((prev)=>prev + e.emoji)
@@ -13,13 +18,35 @@ const Chat = () => {
     }
 
     const endRef = useRef(null)
+
     useEffect(() => {
         endRef.current?.scrollIntoView({behavior:'smooth'})
     },[])
-    
-    
 
-    console.log(text)
+    useEffect(() => {
+        const unSub = onSnapshot(doc(db, 'chats', chatId), (res)=>{
+            setChat(res.data())
+        })
+        return () => {
+            unSub()
+        }
+    },[chatId])
+
+    const handleSend = async () => {
+        // if(text === "") return;
+
+        // try {
+        //     await updateDoc(doc(db,"chats",chatId),{
+
+        //     })
+        // } catch (error) {
+        //     console.log(error);
+            
+            
+        // }
+
+    }
+    
     return (
         <div className = 'chat'>
             <div className='top'>
@@ -37,54 +64,16 @@ const Chat = () => {
                 </div>
             </div>
             <div className='center'>
-                <div className='message own'>
+            {chat?.messages?.map(message=>(
+                <div className='message own' key={message?.createdAt}>
                     <div className='texts'>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing 
-                        elit. Natus quis quae qui! Sint asperiores vero nobis 
-                        deserunt aperiam iusto repellendus, optio impedit eius, 
-                        reprehenderit dolorum nihil magnam alias, odit quam. </p>
-                        <span>1 min ago</span>
+                        {message.img && <img src={message.img}/>}
+                        <p>{message.text}</p>
+                        {/* <span>{message}</span> */}
                     </div>
                 </div>
-                <div className='message'>
-                <img src='./avatar.png'/>
-                    <div className='texts'>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing 
-                        elit. Natus quis quae qui! Sint asperiores vero nobis 
-                        deserunt aperiam iusto repellendus, optio impedit eius, 
-                        reprehenderit dolorum nihil magnam alias, odit quam. </p>
-                        <span>1 min ago</span>
-                    </div>
-                </div>
-                <div className='message own'>
-                    <div className='texts'>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing 
-                        elit. Natus quis quae qui! Sint asperiores vero nobis 
-                        deserunt aperiam iusto repellendus, optio impedit eius, 
-                        reprehenderit dolorum nihil magnam alias, odit quam. </p>
-                        <span>1 min ago</span>
-                    </div>
-                </div>
-                <div className='message'>
-                <img src='./avatar.png'/>
-                    <div className='texts'>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing 
-                        elit. Natus quis quae qui! Sint asperiores vero nobis 
-                        deserunt aperiam iusto repellendus, optio impedit eius, 
-                        reprehenderit dolorum nihil magnam alias, odit quam. </p>
-                        <span>1 min ago</span>
-                    </div>
-                </div>
-                <div className='message own'>
-                    <div className='texts'>
-                        <img src='https://images.pexels.com/photos/19786392/pexels-photo-19786392/free-photo-of-photo-of-pink-flowers-and-a-kitten-on-a-shelf.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'/>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing 
-                        elit. Natus quis quae qui! Sint asperiores vero nobis 
-                        deserunt aperiam iusto repellendus, optio impedit eius, 
-                        reprehenderit dolorum nihil magnam alias, odit quam. </p>
-                        <span>1 min ago</span>
-                    </div>
-                </div>
+            ))
+            }
                 <div ref={endRef}></div>
             </div>
             <div className='bottom'>
@@ -100,10 +89,11 @@ const Chat = () => {
                         <EmojiPicker open={open} onEmojiClick={handleEmoji}/>
                     </div>
                 </div>
-                <button className='sendButton'>Send</button>
+                <button className='sendButton' onClick={handleSend}>Send</button>
             </div>
         </div>
     )
 }
 
 export default Chat;
+
