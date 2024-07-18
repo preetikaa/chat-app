@@ -5,11 +5,17 @@ import { db } from '../../lib/firebase'
 import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../lib/chatStore'
 import { useUserStore } from '../../lib/userStore'
+import upload from '../../lib/upload'
 
 const Chat = () => {
     const[open, setOpen] = useState(false)
     const[text, setText] = useState("")
     const[chat, setChat] = useState()
+    const[img, setImg] = useState({
+        file: null,
+        url:""
+    })
+
 
     const {currentUser} = useUserStore()
     const {chatId, user} = useChatStore()
@@ -20,6 +26,15 @@ const Chat = () => {
         setText((prev)=>prev + e.emoji)
         setOpen(false)
     }
+
+    const handleImg = (e) => {
+        if(e.target.files[0]){
+          setImg({
+            file:e.target.files[0],
+            url: URL.createObjectURL(e.target.files[0])
+          })
+        }
+      }
 
     const endRef = useRef(null)
 
@@ -39,12 +54,19 @@ const Chat = () => {
     const handleSend = async () => {
         if(text === "") return;
 
-        try {
+        let imgUrl = null;
+
+        try{
+            if(img.file){
+                imgUrl = await upload(img.file);
+            }
+
             await updateDoc(doc(db,"chats",chatId),{
                 messages:arrayUnion({
                     senderId: currentUser.id,
                     text,
                     createdAt: new Date(),
+                    ...(imgUrl && {img: imgUrl})
                 })
             })
 
@@ -66,19 +88,20 @@ const Chat = () => {
     
                     await updateDoc(userChatsRef,{
                         chats: userChatsData.chats,
-    
                     })
                 }
             })
-
         } catch (error) {
-            console.log(error);
-            
-            
+            console.log(error);   
         }
+        setImg({
+            file: null,
+            url: null
+        })
 
+        setText("")
     }
-    
+
     return (
         <div className = 'chat'>
             <div className='top'>
@@ -97,7 +120,7 @@ const Chat = () => {
             </div>
             <div className='center'>
             {chat?.messages?.map(message=>(
-                <div className='message own' key={message?.createdAt}>
+                <div className={message.senderId === currentUser.id ? 'message own' : 'message'} key={message?.createdAt}>
                     <div className='texts'>
                         {message.img && <img src={message.img}/>}
                         <p>{message.text}</p>
@@ -106,11 +129,19 @@ const Chat = () => {
                 </div>
             ))
             }
-                <div ref={endRef}></div>
+            {img.url && <div className="message own">
+                <div className='texts'>
+                    <img src={img.url}/>
+                </div>
+            </div>}
+            <div ref={endRef}></div>
             </div>
             <div className='bottom'>
                 <div className='icons'>
-                    <img src='./img.png'/>
+                    <label htmlFor='file'>
+                        <img src='./img.png'/>
+                    </label>
+                    <input type='file' id='file' style={{display:"none"}} onChange={handleImg}/>
                     <img src='./camera.png'/>
                     <img src='./mic.png'/>
                 </div>
