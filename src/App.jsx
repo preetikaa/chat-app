@@ -22,7 +22,6 @@ const App = () => {
       setIsLoading(false);
 
     })
-
     return ()=>{
       unSub();
     }
